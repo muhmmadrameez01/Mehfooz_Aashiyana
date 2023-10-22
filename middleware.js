@@ -6,31 +6,27 @@ const checkToken = (req, res, next) => {
   console.log(token);
 
   if (token) {
-    if (token.startsWith("Bearer ")) {
-      token = token.slice(7); // Remove "Bearer " prefix from the token
-      jwt.verify(token, config.key, (err, decoded) => {
-        if (err) {
-          return res.status(401).json({
-            status: false,
-            message: "Invalid Token",
-          });
-        } else {
-          req.decoded = decoded;
-          next();
-        }
-      });
-    } else {
-      return res.status(401).json({
-        status: false,
-        message: "Invalid Token Format",
-      });
-    }
+    token = token.slice(7); // Remove "Bearer " prefix from the token
+
+    jwt.verify(token, config.key, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          status: true,
+          message: "valid Token"
+        });
+      } else {
+        req.decoded = decoded;
+        next();
+      }
+    });
   } else {
     return res.status(401).json({
       status: false,
-      message: "No token provided",
+      message: "No token provided"
     });
   }
 };
 
-module.exports = { checkToken };
+module.exports = {
+  checkToken: checkToken,
+};

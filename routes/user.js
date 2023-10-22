@@ -91,14 +91,14 @@ router.route("/register").post((req, res) => {
       res.status(200).json("ok");
     })
     .catch((err) => {
-      res.status(403).json({
+      res.status(422).json({
         msg: err,
       });
     });
   // res.json("registered");
 });
 
-router.patch("/update/:email", middleware.checkToken, (req, res) => {
+router.patch("/:email", middleware.checkToken, (req, res) => {
   User.findOneAndUpdate(
     { email: req.params.email },
     { $set: { password: req.body.password } }
