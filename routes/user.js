@@ -6,26 +6,52 @@ const middleware = require("../middleware");
 
 const router = express.Router();
 //-----------------------Get Email------------------------------------------
+// router.get("/:email", middleware.checkToken, async (req, res) => {
+//   try {
+//     const email = req.params.email;
+//     const existingUser = await User.findOne({ email });
+//     if (!existingUser) {
+//       return res.status(400).json({ msg: "User not found" });
+//     }
+
+//     res.json({
+//       msg: "User found",
+//       user: existingUser,
+//     });
+
+//   } catch (e) {
+//     res.status(500).json({ error: e.message });
+//   }
+// });
 router.get("/:email", middleware.checkToken, async (req, res) => {
   try {
-    const email = req.params.email;
-    const existingUser = await User.findOne({ email });
-    if (!existingUser) {
-      return res.status(400).json({ msg: "User not found" });
+    console.log("inside the get email");
+    const user = await User.findOne({ email: req.params.email });
+
+    if (!user) {
+      return res.status(404).json({
+        msg: "User not found",
+      });
     }
 
     res.json({
       msg: "User found",
-      user: existingUser,
+      user: user,
     });
-    
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.log("email found");
+  } catch (err) {
+    console.error(err); // Log the error for debugging purposes.
+    res.status(500).json({
+      msg: "Error",
+      error: err.message, // Use err.message to get the error message.
+    });
   }
 });
+
 //------------------------LOGIN----------------------------------------------
 
 router.route("/login").post((req, res) => {
+  console.log("inside the login");
   User.findOne({ email: req.body.email })
     .then((result) => {
       if (!result) {
@@ -37,7 +63,9 @@ router.route("/login").post((req, res) => {
         res.json({
           token: token,
           msg: "Login successful",
+
         });
+        console.log("User login");
       } else {
         res.status(403).json({ msg: "Password incorrect" });
       }
@@ -67,7 +95,7 @@ router.route("/register").post((req, res) => {
         msg: err,
       });
     });
-  res.json("registered");
+  // res.json("registered");
 });
 
 router.patch("/update/:email", middleware.checkToken, (req, res) => {
