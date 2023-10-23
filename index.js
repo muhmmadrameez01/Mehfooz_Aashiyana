@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 const app = express();
 const Port = process.env.PORT || 5000;
 
-const connection = mongoose.connect("mongodb+srv://rhssoft1:HN5LOaFcnyoy6yB8@cluster0.4rvjzct.mongodb.net/?retryWrites=true&w=majority")
-
+mongoose.connect("mongodb+srv://rhssoft1:HN5LOaFcnyoy6yB8@cluster0.4rvjzct.mongodb.net/?retryWrites=true&w=majority")
+const connection = mongoose.connection;
 connection.on("error", (err) => {
   console.error("MongoDB connection error:", err);
 });
