@@ -6,9 +6,8 @@ const middleware = require("../middleware");
 
 const router = express.Router();
 
-router.get("/:email", middleware.checkToken, async (req, res) => {
+router.route("/:email").get(middleware.checkToken, async (req, res) => {
   try {
-    console.log("inside the get email");
     const user = await User.findOne({ email: req.params.email });
 
     if (!user) {
@@ -17,11 +16,19 @@ router.get("/:email", middleware.checkToken, async (req, res) => {
       });
     }
 
+    // Retrieve the token from the request headers
+    const token = req.headers.authorization.slice(7);
+
+    // Set the token as an HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true, // Set to true for HTTPS
+    });
+
     res.json({
       msg: "User found",
       user: user,
     });
-    console.log("email found");
   } catch (err) {
     console.error(err); // Log the error for debugging purposes.
     res.status(500).json({
@@ -30,8 +37,34 @@ router.get("/:email", middleware.checkToken, async (req, res) => {
     });
   }
 });
+// router.route("/:email").get(middleware.checkToken, async(req,res)=> {
+//   try {
+//     console.log("inside the get email");
+//     const user = await User.findOne({ email: req.params.email });
+
+//     if (!user) {
+//       return res.status(404).json({
+//         msg: "User not found",
+//       });
+
+// };
+
+//     res.json({
+//       msg: "User found",
+//       user: user,
+//     });
+//     console.log("email found");
+//   } catch (err) {
+//     console.error(err); // Log the error for debugging purposes.
+//     res.status(500).json({
+//       msg: "Error",
+//       error: err.message, // Use err.message to get the error message.
+//     });
+//   }
+// });
 //------------------------Check Username-----------------------------//
-router.get("/checkemail/:email", middleware.checkToken, async (req, res) => {
+router.route("/checkemail/:email").get(middleware.checkToken, async(req,res)=>
+ {
   try {
     console.log("inside the get email");
     const user = await User.findOne({ email: req.params.email });
@@ -106,7 +139,8 @@ router.route("/register").post((req, res) => {
   // res.json("registered");
 });
 
-router.patch("/:email", middleware.checkToken, (req, res) => {
+router.route("/update/:email").patch(middleware.checkToken, async(req,res)=>
+{
   User.findOneAndUpdate(
     { email: req.params.email },
     { $set: { password: req.body.password } }

@@ -7,12 +7,11 @@ const checkToken = (req, res, next) => {
 
   if (token) {
     token = token.slice(7); // Remove "Bearer " prefix from the token
-
     jwt.verify(token, config.key, (err, decoded) => {
       if (err) {
-        return res.status(401).json({
-          status: true,
-          message: "valid Token"
+        return res.json({
+          status: false,
+          message: "Token is invalid"
         });
       } else {
         req.decoded = decoded;
