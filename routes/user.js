@@ -5,24 +5,7 @@ const jwt = require("jsonwebtoken");
 const middleware = require("../middleware");
 
 const router = express.Router();
-//-----------------------Get Email------------------------------------------
-// router.get("/:email", middleware.checkToken, async (req, res) => {
-//   try {
-//     const email = req.params.email;
-//     const existingUser = await User.findOne({ email });
-//     if (!existingUser) {
-//       return res.status(400).json({ msg: "User not found" });
-//     }
 
-//     res.json({
-//       msg: "User found",
-//       user: existingUser,
-//     });
-
-//   } catch (e) {
-//     res.status(500).json({ error: e.message });
-//   }
-// });
 router.get("/:email", middleware.checkToken, async (req, res) => {
   try {
     console.log("inside the get email");
@@ -47,7 +30,32 @@ router.get("/:email", middleware.checkToken, async (req, res) => {
     });
   }
 });
+//------------------------Check Username-----------------------------//
+router.get("/checkemail/:email", middleware.checkToken, async (req, res) => {
+  try {
+    console.log("inside the get email");
+    const user = await User.findOne({ email: req.params.email });
 
+    if (!user) {
+      return res.status(404).json({
+        msg: "User not found",
+      });
+    }
+
+    res.json({
+      msg: "User found",
+      user: user,
+    });
+    console.log("email found");
+  } catch (err) {
+    console.error(err); // Log the error for debugging purposes.
+    res.status(500).json({
+      msg: "Error",
+      error: err.message, // Use err.message to get the error message.
+    });
+  }
+
+});
 //------------------------LOGIN----------------------------------------------
 
 router.route("/login").post((req, res) => {
