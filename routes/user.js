@@ -63,31 +63,46 @@ router.route("/:email").get(middleware.checkToken, async (req, res) => {
 //   }
 // });
 //------------------------Check Username-----------------------------//
-router.route("/checkemail/:email").get(async (req, res) => {
+router.get('/checkemail/:email', async (req, res) => {
   try {
-    console.log("inside the get email");
-    const user = await User.findOne({ email: req.params.email });
-
-    if (!user) {
-      return res.status(404).json({
-        msg: "User not found",
+    const result = await User.findOne({ email: req.params.email });
+    if (result !== null) {
+      return res.json({
+        Status: true,
       });
+    } else {
+      return res.json({ Status: false });
     }
-
-    res.json({
-      msg: "User found",
-      user: user,
-    });
-    console.log("email found");
   } catch (err) {
-    console.error(err); // Log the error for debugging purposes.
-    res.status(500).json({
-      msg: "Error",
-      error: err.message, // Use err.message to get the error message.
-    });
+    return res.status(500).json({ msg: err.message });
   }
-
 });
+// router.route("/checkemail/:email").get(async (req, res) => {
+//   try {
+//     console.log("inside the get email");
+//     const user = await User.findOne({ email: req.params.email });
+
+//     if (!user) {
+//       return res.status(404).json({
+//         msg: "User not found",
+//       });
+//     }
+
+//     res.json({
+//       msg: "User found",
+//       user: user,
+//       status: true,
+//     });
+//     console.log("email found");
+//   } catch (err) {
+//     console.error(err); // Log the error for debugging purposes.
+//     res.status(500).json({
+//       msg: "Error",
+//       error: err.message, // Use err.message to get the error message.
+//     });
+//   }
+
+// });
 //------------------------LOGIN----------------------------------------------
 
 router.route("/login").post((req, res) => {
