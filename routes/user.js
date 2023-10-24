@@ -63,8 +63,7 @@ router.route("/:email").get(middleware.checkToken, async (req, res) => {
 //   }
 // });
 //------------------------Check Username-----------------------------//
-router.route("/checkemail/:email").get(middleware.checkToken, async(req,res)=>
- {
+router.route("/checkemail/:email").get(async (req, res) => {
   try {
     console.log("inside the get email");
     const user = await User.findOne({ email: req.params.email });
@@ -139,8 +138,7 @@ router.route("/register").post((req, res) => {
   // res.json("registered");
 });
 
-router.route("/update/:email").patch(middleware.checkToken, async(req,res)=>
-{
+router.route("/update/:email").patch(middleware.checkToken, async (req, res) => {
   User.findOneAndUpdate(
     { email: req.params.email },
     { $set: { password: req.body.password } }
