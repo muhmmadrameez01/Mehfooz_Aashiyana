@@ -6,12 +6,11 @@ const checkToken = (req, res, next) => {
   console.log(token);
 
   if (token) {
-    token = token.slice(7); // Remove "Bearer " prefix from the token
     jwt.verify(token, config.key, (err, decoded) => {
       if (err) {
-        return res.json({
-          status: false,
-          message: "Token is invalid"
+        return res.status(401).json({
+          
+          success: false,
         });
       } else {
         req.decoded = decoded;
@@ -21,7 +20,7 @@ const checkToken = (req, res, next) => {
   } else {
     return res.status(401).json({
       status: false,
-      message: "No token provided"
+      message: "No token provided",
     });
   }
 };
