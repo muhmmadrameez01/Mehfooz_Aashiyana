@@ -16,7 +16,11 @@ connection.once("open", () => {
 app.use(express.json());
 
 const userRoute = require("./routes/user");
+const ngoRoute = require("./routes/ngo");
+const complaintRoute = require("./routes/complaint");
 app.use("/user", userRoute);
+app.use("/ngo", ngoRoute);
+app.use("/form", complaintRoute);
 
 app.get("/", (req, res) => res.json("Your first REST API"));
 
