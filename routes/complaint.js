@@ -5,9 +5,10 @@ const multer = require('multer');
 
 // Create a route to add a new complaint
 const storage = multer.memoryStorage(); // Store the image in memory (you can change this to disk storage if needed)
-const upload = multer({ storage: storage });
+
 
 // Multer middleware for image upload
+const upload = multer({ dest: 'uploads/' });
 router.post('/complaints', upload.single('image'), async (req, res) => {
     console.log('Inside the complaint');
 
