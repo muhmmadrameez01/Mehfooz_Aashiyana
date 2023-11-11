@@ -25,7 +25,7 @@ router.post('/complaints', upload.single('image'), async (req, res) => {
 
         const complaint = new Complaint(complaintData);
         console.log('Request Body:', req.body);
-        console.log('Received File:', req.file);
+
 
         await complaint.save();
         console.log('Complaint registered');
