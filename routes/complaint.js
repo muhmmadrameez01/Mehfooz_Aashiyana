@@ -1,31 +1,38 @@
 const express = require("express");
 const Complaint = require("../models/complaint.model");
 const router = express.Router();
+const multer = require('multer');
 
 // Create a route to add a new complaint
-router.route("/complaints").post((req, res) => {
-    console.log("inside the complaint");
-    const complaint = new Complaint({
-        name: req.body.name,
-        email: req.body.email,
-        phoneNumber: req.body.phoneNumber,
-        address: req.body.address,
-        image: req.body.image,
-        description: req.body.description,
+const storage = multer.memoryStorage(); // Store the image in memory (you can change this to disk storage if needed)
+const upload = multer({ storage: storage });
 
-    });
-    complaint
-        .save()
-        .then(() => {
-            console.log("Complaint registered");
-            res.status(200).json("ok");
-        })
-        .catch((err) => {
-            res.status(422).json({
-                msg: err,
-            });
-        });
-    // res.json("registered");
+// Multer middleware for image upload
+router.post('/complaints', upload.single('image'), async (req, res) => {
+    console.log('Inside the complaint');
+
+    try {
+
+        const complaintData = {
+            name: req.body.name,
+            email: req.body.email,
+            phoneNumber: req.body.phoneNumber,
+            address: req.body.address,
+            description: req.body.description,
+            image: req.body.image,
+        };
+
+        const complaint = new Complaint(complaintData);
+        console.log('Request Body:', req.body);
+        console.log('Received File:', req.file);
+
+        await complaint.save();
+        console.log('Complaint registered');
+        res.status(200).json('ok');
+    } catch (err) {
+        console.error('Error:', err);
+        res.status(422).json({ msg: err.message });
+    }
 });
 
 // Create a route to get a list of all complaints
@@ -65,27 +72,36 @@ router.delete("/delete/:email", async (req, res) => {
         res.status(500).json({ error: "An error occurred" });
     }
 });
+
 //--------------------------------- Update Complaint ---------------//
-router.route("/update/:email").patch(async (req, res) => {
-    Complaint.findOneAndUpdate(
-        { email: req.params.email },
-        { $set: { name: req.body.name } },
-        { $set: { phoneNumber: req.body.phoneNumber } },
-        { $set: { address: req.body.address } },
-        { $set: { image: req.body.image } },
-        { $set: { description: req.body.description } },
-    )
-        .then(() => {
-            res.json({
-                msg: "Complaint successfully updated",
-                email: req.params.email,
-            });
-        })
-        .catch((err) => {
-            res.status(403).json({
-                msg: "Complaint update failed",
-                error: err,
-            });
+router.patch("/update/:email", async (req, res) => {
+    try {
+        const updatedComplaint = await Complaint.findOneAndUpdate(
+            { email: req.params.email },
+            {
+                $set: {
+                    name: req.body.name,
+                    phoneNumber: req.body.phoneNumber,
+                    address: req.body.address,
+                    image: req.body.image,
+                    description: req.body.description,
+                },
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedComplaint) {
+            return res.status(404).json({ message: "Complaint not found" });
+        }
+
+        res.status(200).json({
+            message: "Complaint successfully updated",
+            email: req.params.email,
+            updatedComplaint: updatedComplaint,
         });
+    } catch (err) {
+        res.status(500).json({ error: "An error occurred", msg: err.message });
+    }
 });
+
 module.exports = router;
