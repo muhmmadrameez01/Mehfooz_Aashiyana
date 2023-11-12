@@ -1,107 +1,110 @@
-const express = require("express");
-const Complaint = require("../models/complaint.model");
+const express = require('express');
 const router = express.Router();
+const Complaint = require('../models/complaint.model');
+const AWS = require('aws-sdk');
 const multer = require('multer');
+const multerS3 = require('multer-s3');
 
-// Create a route to add a new complaint
-const storage = multer.memoryStorage(); // Store the image in memory (you can change this to disk storage if needed)
+// Configuring AWS
+AWS.config.update({
+    accessKeyId: 'AKIA5ZBIV4KPCLPCVWN5',
+    secretAccessKey: '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',
+    region: 'eu-north-1'
+});
 
+const s3 = new AWS.S3();
 
-// Multer middleware for image upload
-const upload = multer({ dest: 'uploads/' });
+// Configuring Multer to store the image directly in S3
+const upload = multer({
+    storage: multerS3({
+        s3: s3,
+        bucket: 'imagestoreage',
+        // acl: 'public-read', // Adjust permissions as needed
+        metadata: function (req, file, cb) {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: function (req, file, cb) {
+            cb(null, Date.now().toString() + '-' + file.originalname);
+        }
+    })
+});
+
+// Register a complaint with an image upload
 router.post('/complaints', upload.single('image'), async (req, res) => {
-    console.log('Inside the complaint');
-
     try {
+        const { name, email, phoneNumber, address, description } = req.body;
 
-        const complaintData = {
-            name: req.body.name,
-            email: req.body.email,
-            phoneNumber: req.body.phoneNumber,
-            address: req.body.address,
-            description: req.body.description,
-            image: req.body.image,
-        };
+        const newComplaint = new Complaint({
 
-        const complaint = new Complaint(complaintData);
-        console.log('Request Body:', req.body);
+            name,
+            email,
+            phoneNumber,
+            address,
+            description,
+            imageUrl: req.file.location // Accessing the location property of the uploaded file
+        });
 
-
-        await complaint.save();
-        console.log('Complaint registered');
-        res.status(200).json('ok');
-    } catch (err) {
-        console.error('Error:', err);
-        res.status(422).json({ msg: err.message });
+        await newComplaint.save();
+        res.status(201).json({ message: 'Complaint registered successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while registering the complaint' });
+        console.log(error);
     }
 });
 
-// Create a route to get a list of all complaints
-router.route("/:email").get(async (req, res) => {
+// Other routes for GET, DELETE, UPDATE as needed
+router.get('/complaints', async (req, res) => {
+    try {
+        const complaints = await Complaint.find();
+        res.status(200).json(complaints);
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while fetching complaints' });
+    }
+});
+
+// Get a single complaint by email
+router.get('/complaints/:email', async (req, res) => {
     try {
         const complaint = await Complaint.findOne({ email: req.params.email });
-
         if (!complaint) {
-            return res.status(404).json({
-                msg: "Complaint not found",
-            });
+            res.status(404).json({ message: 'Complaint not found' });
+        } else {
+            res.status(200).json(complaint);
         }
-        res.json({
-            msg: "Complaint found",
-            complaint: complaint,
-        });
-    } catch (err) {
-        console.error(err); // Log the error for debugging purposes.
-        res.status(500).json({
-            msg: "Error",
-            error: err.message, // Use err.message to get the error message.
-        });
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while fetching the complaint' });
     }
 });
 
-//--------------------------------delete Complaint -----------------
-router.delete("/delete/:email", async (req, res) => {
+// Delete a complaint by email
+router.delete('/complaints/:email', async (req, res) => {
     try {
-        const complaint = await Complaint.findOneAndDelete({ email: req.params.email });
-
-        if (!complaint) {
-            return res.status(404).json({ message: "Complaint not found" });
+        const deletedComplaint = await Complaint.findOneAndDelete({ email: req.params.email });
+        if (!deletedComplaint) {
+            res.status(404).json({ message: 'Complaint not found' });
+        } else {
+            res.status(200).json({ message: 'Complaint successfully deleted' });
         }
-
-        res.status(200).json({ message: "Complaint successfully deleted" });
-    } catch (err) {
-        res.status(500).json({ error: "An error occurred" });
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while deleting the complaint' });
     }
 });
 
-//--------------------------------- Update Complaint ---------------//
-router.patch("/update/:email", async (req, res) => {
+// Update a complaint by email
+router.patch('/complaints/:email', async (req, res) => {
     try {
         const updatedComplaint = await Complaint.findOneAndUpdate(
             { email: req.params.email },
-            {
-                $set: {
-                    name: req.body.name,
-                    phoneNumber: req.body.phoneNumber,
-                    address: req.body.address,
-                    image: req.body.image,
-                    description: req.body.description,
-                },
-            },
-            { new: true } // Return the updated document
+            { $set: req.body }, // You might want to perform more precise field updates
+            { new: true }
         );
-
         if (!updatedComplaint) {
-            return res.status(404).json({ message: "Complaint not found" });
+            res.status(404).json({ message: 'Complaint not found' });
+        } else {
+            res.status(200).json({ message: 'Complaint successfully updated', updatedComplaint });
         }
-
-        res.status(200).json({
-            message: "Complaint successfully updated",
-            email: req.params.email,
-            updatedComplaint: updatedComplaint,
-        });
-    } catch (err) {
-        res.status(500).json({ error: "An error occurred", msg: err.message });
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while updating the complaint' });
     }
 });
 
