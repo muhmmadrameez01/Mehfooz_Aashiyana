@@ -104,6 +104,16 @@ router.route("/register").post((req, res) => {
   // res.json("registered");
 });
 
+router.route("/public/register").get(async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 router.route("/update/:email").patch(middleware.checkToken, async (req, res) => {
   User.findOneAndUpdate(
     { email: req.params.email },

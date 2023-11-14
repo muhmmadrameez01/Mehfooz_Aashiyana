@@ -30,6 +30,20 @@ router.route("/register").post((req, res) => {
         });
     // res.json("registered");
 });
+router.route('/register').get(async (req, res) => {
+    try {
+      // Retrieve all users from the database
+      const ngo = await Ngo.find();
+  
+      // Send the users as JSON response
+      res.json(ngo);
+    } catch (error) {
+      // Handle errors
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
 //--------------------------------------- NGO Login ------------------------------------//
 router.route("/login").post((req, res) => {
     console.log("inside the login");
